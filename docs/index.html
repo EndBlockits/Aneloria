@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ANELORIA — RPG-сервер Minecraft</title>
+<meta name="description" content="ANELORIA — RPG-сервер Minecraft: шесть рас, расовые испытания, континент 8000×8000 и Лабиринт, который каждый раз другой.">
+<meta name="theme-color" content="#0d0a14">
+<meta property="og:title" content="ANELORIA — RPG-сервер Minecraft">
+<meta property="og:description" content="Шесть рас, расовые испытания, континент 8000×8000 и Лабиринт, который каждый раз другой.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%230d0a14'/%3E%3Crect x='4' y='2' width='8' height='12' fill='%23b07cff'/%3E%3Crect x='6' y='4' width='4' height='8' fill='%230d0a14'/%3E%3Crect x='7' y='7' width='2' height='2' fill='%23f2b45a'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alegreya+SC:wght@700;800&family=Alegreya+Sans:wght@400;500;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#0d0a14;      /* фон: ночь континента */
+  --stone:#17121f;      /* панели: камень Лабиринта */
+  --seam:#2c2338;       /* швы и линии */
+  --ink:#ece6f4;        /* основной текст */
+  --dust:#a99cbb;       /* второстепенный текст */
+  --rune:#b07cff;       /* фиолетовый портала (как HUD сервера) */
+  --ember:#f2b45a;      /* редкий тёплый акцент */
+  --moss:#7fd6a0;       /* статус «готово» */
+  --display:"Alegreya SC","Palatino Linotype",Georgia,serif;
+  --body:"Alegreya Sans","Segoe UI",system-ui,sans-serif;
+  --pixel:"Press Start 2P","Courier New",monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--night);scroll-behavior:smooth;scroll-padding-top:72px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--night);color:var(--ink);font:400 1.06rem/1.6 var(--body);padding-inline:16px}
+a{color:var(--rune)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--ember);outline-offset:3px}
+.wrap{max-width:1040px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);font-weight:800;text-wrap:balance;margin:0}
+h2{font-size:clamp(1.7rem,4vw,2.4rem);letter-spacing:.01em}
+h3{font-size:1.25rem}
+p{margin:0}
+.lead{color:var(--dust);max-width:62ch}
+.sub{margin-top:12px}
+section{padding-block:72px;border-top:1px solid var(--seam)}
+.eyebrow{font-family:var(--pixel);font-size:.58rem;color:var(--rune);letter-spacing:.08em;margin-bottom:14px;text-transform:uppercase}
+
+/* Шапка: прилипает, чтобы разделы были под рукой */
+.top{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:14px;flex-wrap:wrap;
+  background:color-mix(in srgb,var(--night) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid transparent}
+.top.stuck{border-bottom-color:var(--seam)}
+.mark{font-family:var(--display);font-weight:800;font-size:1.15rem;letter-spacing:.14em;text-decoration:none;color:var(--ink)}
+.top nav{display:flex;gap:16px;flex-wrap:wrap;font-size:.95rem}
+.top nav a{color:var(--dust);text-decoration:none;padding-block:2px;border-bottom:1px solid transparent}
+.top nav a:hover,.top nav a.on{color:var(--ink);border-bottom-color:var(--rune)}
+
+/* Главный экран */
+.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:32px;align-items:center;padding-block:40px 64px}
+.hero h1{font-size:clamp(3rem,9vw,6.4rem);line-height:.92;letter-spacing:.04em;
+  background:linear-gradient(180deg,var(--ink) 30%,var(--rune));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero .lead{margin-top:18px;font-size:1.18rem}
+.status{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.pill{font-family:var(--pixel);font-size:.62rem;line-height:1;padding:9px 12px;border:1px solid var(--seam);background:var(--stone);color:var(--dust)}
+.pill.live{color:var(--ember);border-color:color-mix(in srgb,var(--ember) 45%,var(--seam))}
+.cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.btn{font:700 1rem var(--body);padding:12px 20px;border:1px solid var(--rune);background:var(--rune);color:#140a26;text-decoration:none;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--seam)}
+.btn.ghost:hover{border-color:var(--rune)}
+.portal{position:relative;aspect-ratio:3/4;width:100%;max-height:520px;justify-self:center;margin:0}
+.portal canvas{width:100%;height:100%;display:block}
+.portal figcaption{position:absolute;left:0;right:0;bottom:6px;text-align:center;font-family:var(--pixel);font-size:.55rem;color:var(--dust)}
+
+/* Путь игрока */
+.path{list-style:none;margin:36px 0 0;padding:0;display:grid;counter-reset:step}
+.path li{display:grid;grid-template-columns:64px minmax(0,1fr);gap:18px;padding-block:20px;border-bottom:1px solid var(--seam);counter-increment:step}
+.path li::before{content:counter(step);font-family:var(--pixel);font-size:.9rem;color:var(--rune);padding-top:6px}
+.path h3{margin-bottom:4px}.path p{color:var(--dust)}
+.quote{margin-top:10px;padding:10px 14px;border-left:2px solid var(--rune);background:var(--stone);font-family:var(--pixel);font-size:.6rem;line-height:1.9;color:var(--ink)}
+
+/* Расы */
+.races{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin-top:32px;border-top:1px solid var(--seam);border-left:1px solid var(--seam)}
+.race{padding:22px;border-right:1px solid var(--seam);border-bottom:1px solid var(--seam);min-width:0}
+.race i{display:block;width:14px;height:14px;transform:rotate(45deg);margin:4px 0 16px 3px;background:var(--c)}
+.race p{color:var(--dust);margin-top:6px;font-size:.98rem}
+
+/* Мир */
+.world{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start;margin-top:32px}
+.facts{display:grid;gap:14px}
+.fact{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:baseline;padding-bottom:12px;border-bottom:1px dashed var(--seam)}
+.fact span{color:var(--dust)}
+.fact b{font-family:var(--pixel);font-size:.75rem;font-weight:400;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+.mapbox{background:var(--stone);border:1px solid var(--seam);padding:14px}
+.mapbox canvas{width:100%;aspect-ratio:1/1;display:block;image-rendering:pixelated}
+.mapbox p{font-family:var(--pixel);font-size:.55rem;color:var(--dust);margin-top:10px;line-height:1.7}
+
+/* Лабиринт: этажи идут снизу вверх по сложности, на странице — сверху вниз */
+.floors{display:grid;gap:0;margin-top:32px}
+.floor{display:grid;grid-template-columns:120px minmax(0,1fr);gap:24px;padding-block:26px;border-bottom:1px solid var(--seam)}
+.floor>b{font-family:var(--pixel);font-size:.7rem;font-weight:400;color:var(--rune);padding-top:8px}
+.floor p{color:var(--dust);margin-top:6px;max-width:64ch}
+.floor ul{margin:12px 0 0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+.floor li{font-size:.9rem;padding:4px 10px;border:1px solid var(--seam);color:var(--dust)}
+.floor.locked>b,.floor.locked h3{color:var(--dust)}
+
+/* Особенности */
+.traits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 40px;margin-top:32px}
+.traits div{min-width:0}.traits p{color:var(--dust);margin-top:6px}
+
+/* Ход разработки */
+.road{margin-top:32px;display:grid;gap:0}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:baseline;padding-block:14px;border-bottom:1px dashed var(--seam)}
+.row span{min-width:0}
+.tag{font-family:var(--pixel);font-size:.55rem;white-space:nowrap;color:var(--dust)}
+.tag.done{color:var(--moss)}.tag.test{color:var(--ember)}
+
+/* Как зайти */
+.join{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px;margin-top:28px;align-items:start}
+.ip{background:var(--stone);border:1px solid var(--seam);padding:22px}
+.ip small{display:block;color:var(--dust);font-size:.85rem}
+.ip code{display:block;font-family:var(--pixel);font-size:.85rem;margin-top:12px;color:var(--ember);word-break:break-all}
+.ip p{margin-top:12px;color:var(--dust);font-size:.95rem}
+.ip .btn{margin-top:16px}
+.join ol{margin:0;padding-left:22px;display:grid;gap:10px;color:var(--dust)}
+.links{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+
+/* Вопросы */
+.faq{margin-top:28px;max-width:74ch}
+.faq details{border-bottom:1px solid var(--seam)}
+.faq summary{cursor:pointer;padding-block:16px;font-weight:700;list-style:none;display:flex;justify-content:space-between;gap:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--pixel);font-size:.7rem;color:var(--rune);padding-top:6px}
+.faq details[open] summary::after{content:"–"}
+.faq p{color:var(--dust);padding-bottom:18px}
+
+/* Политика конфиденциальности */
+.policy{max-width:70ch}
+.policy h3{margin-top:24px;font-size:1.1rem}
+.policy p,.policy li{color:var(--dust)}.policy p{margin-top:8px}.policy ul{margin:8px 0 0;padding-left:20px;display:grid;gap:6px}
+footer{padding-block:28px 40px;border-top:1px solid var(--seam);color:var(--dust);font-size:.9rem;display:grid;gap:6px}
+
+@media (max-width:760px){
+  .hero,.world,.join{grid-template-columns:minmax(0,1fr)}
+  .portal{max-height:380px;aspect-ratio:4/5;max-width:340px}
+  .traits{grid-template-columns:minmax(0,1fr)}
+  .races{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .path li{grid-template-columns:44px minmax(0,1fr);gap:12px}
+  .floor{grid-template-columns:minmax(0,1fr);gap:4px}
+  section{padding-block:52px}
+  .top nav{gap:12px;font-size:.88rem}
+}
+@media (max-width:420px){.races{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top" id="bar">
+    <a class="mark" href="#top">ANELORIA</a>
+    <nav aria-label="Разделы">
+      <a href="#path">Путь</a><a href="#races">Расы</a><a href="#world">Мир</a><a href="#labyrinth">Лабиринт</a><a href="#progress">Разработка</a><a href="#join">Как зайти</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <div>
+        <h1>ANELORIA</h1>
+        <p class="lead">RPG-сервер Minecraft. Ты попадаешь в игру одной из шести рас — и выживаешь дальше только вместе с другими.</p>
+        <div class="status">
+          <span class="pill live">В разработке</span>
+          <span class="pill">Java 1.20.1</span>
+          <span class="pill">RU · EN</span>
+        </div>
+        <div class="cta">
+          <a class="btn" href="#join">Как зайти</a>
+          <a class="btn ghost" href="#path">Что тебя ждёт</a>
+        </div>
+      </div>
+      <figure class="portal" aria-label="Портал Лабиринта">
+        <canvas id="portal" width="480" height="640"></canvas>
+        <figcaption>Портал Лабиринта</figcaption>
+      </figure>
+    </div>
+
+    <section id="path">
+      <p class="eyebrow">С первой минуты</p>
+      <h2>Путь игрока</h2>
+      <p class="lead sub">Первые часы на сервере идут в одном порядке: от пролога до входа в Лабиринт.</p>
+      <ol class="path">
+        <li><div><h3>Пролог</h3><p>Дорога домой, тёмная комната, включённый монитор. Одно нажатие «Войти» — и стул перед экраном пуст.</p>
+          <p class="quote">Ты провёл в этой игре уже три дня без перерыва. Ты наконец добрался до босса.</p></div></li>
+        <li><div><h3>Выбор расы и класса</h3><p>Раса выбирается первой, на платформе над облаками. У каждой свой сценарий и своё начало. Класс определяет роль в группе.</p></div></li>
+        <li><div><h3>Расовое испытание</h3><p>Наставник твоей расы ведёт через испытание с понятной целью и подсказками прямо в мире — без поиска случайных блоков и координат.</p></div></li>
+        <li><div><h3>Расовый город</h3><p>После испытания — город твоей расы: первые задания NPC и первые союзники.</p></div></li>
+        <li><div><h3>Континент</h3><p>Открытый мир 8000 × 8000 блоков, кланы и задания.</p></div></li>
+        <li><div><h3>Лабиринт</h3><p>Главное испытание сервера. Портал открывается волнами — и за ним каждый раз другая пещера.</p></div></li>
+      </ol>
+    </section>
+
+    <section id="races">
+      <p class="eyebrow">Шесть начал</p>
+      <h2>Расы</h2>
+      <p class="lead sub">У каждой расы свой наставник и своё испытание со своей механикой. Двух одинаковых стартов нет.</p>
+      <div class="races">
+        <div class="race" style="--c:#d9c7a3"><i></i><h3>Человек</h3><p>Испытание начинается в лагере: всего понемногу, зато без слабых мест.</p></div>
+        <div class="race" style="--c:#7fd6a0"><i></i><h3>Эльф</h3><p>Путь по ветровой тропе: точность и лёгкий шаг важнее силы.</p></div>
+        <div class="race" style="--c:#f2b45a"><i></i><h3>Дворф</h3><p>Кузня и раскалённая заготовка: не дай металлу остыть.</p></div>
+        <div class="race" style="--c:#e07a5f"><i></i><h3>Зверолюд</h3><p>Охота: подкрадывайся тихо и бей вовремя.</p></div>
+        <div class="race" style="--c:#c94f6d"><i></i><h3>Варвар</h3><p>Сила, выносливость и бой лицом к лицу.</p></div>
+        <div class="race" style="--c:#b07cff"><i></i><h3>Драконид</h3><p>Испытание маной: учись тратить её с умом.</p></div>
+      </div>
+    </section>
+
+    <section id="world">
+      <p class="eyebrow">Континент</p>
+      <h2>Мир</h2>
+      <div class="world">
+        <div class="facts">
+          <div class="fact"><span>Размер континента</span><b>8000 × 8000</b></div>
+          <div class="fact"><span>Расы</span><b>6</b></div>
+          <div class="fact"><span>Вариантов первого этажа</span><b>10</b></div>
+          <div class="fact"><span>Версия клиента</span><b>Java 1.20.1</b></div>
+          <div class="fact"><span>Языки интерфейса</span><b>RU · EN</b></div>
+          <div class="fact"><span>Ресурспак</span><b>загружается сам</b></div>
+          <p class="lead" style="margin-top:8px">Прогресс привязан к аккаунту и сохраняется между заходами. Позже интерфейс появится на восьми языках.</p>
+        </div>
+        <div class="mapbox">
+          <canvas id="map" width="160" height="160" role="img" aria-label="Схема континента 8000 на 8000 блоков, Лабиринт в центре"></canvas>
+          <p>Схема континента · 1 пиксель ≈ 50 блоков · в центре Лабиринт</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="labyrinth">
+      <p class="eyebrow">Главное испытание</p>
+      <h2>Лабиринт</h2>
+      <p class="lead sub">Все, кто вошёл в одну волну портала, оказываются в одной пещере. Группы появляются в разных её концах и могут встретиться по дороге к выходу.</p>
+      <div class="floors">
+        <div class="floor"><b>Этаж 1</b><div>
+          <h3>Угольная пещера</h3>
+          <p>Десять вариантов пещеры, и два раза подряд один и тот же не выпадает. Выход на следующий этаж — врата с порталом.</p>
+          <ul><li>Обвал в центре</li><li>Гнездовье</li><li>Патрульные тропы</li><li>Затопленный низ</li><li>Кристальные шипы</li><li>Тёмный флигель</li><li>Два лагеря</li><li>Разрушенный мост</li><li>Осада</li></ul>
+        </div></div>
+        <div class="floor"><b>Этаж 2</b><div>
+          <h3>Четыре земли и святилище</h3>
+          <p>Карта 1000 × 1000 блоков. В каждой земле — свой хранитель. Победа над хранителем зажигает печать в святилище; две печати открывают врата выше.</p>
+          <ul><li>Лес гоблинов</li><li>Земля мёртвых</li><li>Логово зверей</li><li>Чёрная скальная гора</li></ul>
+        </div></div>
+        <div class="floor locked"><b>Этаж 3</b><div>
+          <h3>За вратами</h3>
+          <p>В разработке. Что там — узнают те, кто зажжёт печати.</p>
+        </div></div>
+      </div>
+    </section>
+
+    <section id="features">
+      <p class="eyebrow">Не как везде</p>
+      <h2>Чем отличается</h2>
+      <div class="traits">
+        <div><h3>Свои модели и NPC</h3><p>Наставники, хранители и существа сделаны на собственных моделях, а не на обычных мобах.</p></div>
+        <div><h3>Интерфейс без лишнего</h3><p>Окно статуса с портретом расы, полосками здоровья и маны и строкой задания — вместо стандартной таблицы сбоку.</p></div>
+        <div><h3>Игра в команде</h3><p>Способности раскрываются рядом с союзниками, поэтому выгоднее держаться группой и вступать в кланы.</p></div>
+        <div><h3>Испытания без гугла</h3><p>Цель всегда понятна, подсказки показывают направление и расстояние. Координаты знать не нужно.</p></div>
+      </div>
+    </section>
+
+    <section id="progress">
+      <p class="eyebrow">Честно о статусе</p>
+      <h2>Ход разработки</h2>
+      <p class="lead sub">Сервер делается с нуля и пока не открыт. Вот что уже есть и что впереди.</p>
+      <div class="road">
+        <div class="row"><span>Испытания всех шести рас</span><b class="tag done">ГОТОВО</b></div>
+        <div class="row"><span>Пролог нового игрока</span><b class="tag test">ТЕСТИРУЕТСЯ</b></div>
+        <div class="row"><span>Лабиринт, этаж 1: десять вариантов пещеры</span><b class="tag test">ТЕСТИРУЕТСЯ</b></div>
+        <div class="row"><span>Лабиринт, этаж 2: четыре земли и печати</span><b class="tag test">ТЕСТИРУЕТСЯ</b></div>
+        <div class="row"><span>Новый интерфейс и окна в стиле сервера</span><b class="tag test">ТЕСТИРУЕТСЯ</b></div>
+        <div class="row"><span>Лабиринт, этаж 3</span><b class="tag">ВПЕРЕДИ</b></div>
+        <div class="row"><span>Кланы и задания на континенте</span><b class="tag">ВПЕРЕДИ</b></div>
+        <div class="row"><span>Интерфейс на восьми языках</span><b class="tag">ВПЕРЕДИ</b></div>
+        <div class="row"><span>Открытое тестирование</span><b class="tag">ВПЕРЕДИ</b></div>
+      </div>
+    </section>
+
+    <section id="join">
+      <p class="eyebrow">Вход</p>
+      <h2>Как зайти</h2>
+      <div class="join">
+        <div class="ip">
+          <small>Адрес сервера</small>
+          <code id="ip">появится к открытию</code>
+          <p id="ipnote">Сервер в разработке. Адрес опубликуем здесь, когда начнётся тестирование.</p>
+          <button class="btn" id="copy" type="button" hidden>Скопировать адрес</button>
+        </div>
+        <ol>
+          <li>Установи Minecraft: Java Edition версии 1.20.1.</li>
+          <li>Добавь сервер по адресу слева в разделе «Сетевая игра».</li>
+          <li>Согласись на загрузку ресурспака — он скачается сам.</li>
+          <li>После входа начнётся пролог и выбор расы.</li>
+        </ol>
+      </div>
+      <div class="links" id="links" hidden></div>
+    </section>
+
+    <section id="faq">
+      <p class="eyebrow">Коротко</p>
+      <h2>Вопросы</h2>
+      <div class="faq">
+        <details><summary>Нужны ли моды?</summary><p>Нет. Модели, интерфейс и звуки приходят с ресурспаком сервера, он загружается автоматически при входе.</p></details>
+        <details><summary>Можно ли играть одному?</summary><p>Можно, но сервер рассчитан на группы: способности сильнее рядом с союзниками, а в Лабиринте одиночке тяжелее.</p></details>
+        <details><summary>Сохраняется ли прогресс?</summary><p>Да. Раса, класс, задания и инвентарь привязаны к аккаунту. Если выйти посреди Лабиринта, при возвращении ты окажешься в своей же пещере, пока идёт экспедиция.</p></details>
+        <details><summary>На каких языках сервер?</summary><p>Сейчас на русском и английском, язык выбирается в самом начале пролога. В планах восемь языков.</p></details>
+        <details><summary>Когда открытие?</summary><p>Дата пока не назначена. Адрес сервера появится на этой странице, когда начнётся тестирование.</p></details>
+      </div>
+    </section>
+
+    <section id="privacy" class="policy">
+      <h2>Политика конфиденциальности</h2>
+      <p>Действует с 13 ноября 2026 года. Описывает, какие данные получает проект ANELORIA (сайт, игровой сервер и связанные с ним приложения) и как их использует.</p>
+      <h3>Какие данные мы получаем</h3>
+      <ul>
+        <li>Ник и идентификатор (UUID) аккаунта Minecraft — чтобы сохранять игровой прогресс.</li>
+        <li>Игровые данные: выбранная раса, класс, задания, инвентарь, сообщения в игровом чате.</li>
+        <li>Технические данные подключения (IP-адрес, время входа) — для защиты сервера от взломов и нарушителей.</li>
+        <li>Если вы входите через сторонний сервис (например, Threads), — только данные, которые вы сами разрешили передать в окне входа.</li>
+      </ul>
+      <h3>Как мы их используем</h3>
+      <p>Только для работы сервера и приложений проекта: сохранение прогресса, модерация, защита от нарушений. Мы не продаём данные и не передаём их третьим лицам, кроме случаев, когда этого требует закон.</p>
+      <h3>Хранение и удаление</h3>
+      <p>Данные хранятся, пока у вас есть прогресс на сервере. Чтобы удалить свои данные, напишите нам с указанием ника — удалим в течение 30 дней. Если вы отзываете доступ стороннего сервиса, полученные через него данные удаляются автоматически.</p>
+      <h3>Контакты</h3>
+      <p>По вопросам о данных пишите владельцу проекта: <span id="contact">контакт будет добавлен</span>.</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>ANELORIA · независимый проект · Казахстан · <a href="#privacy">Политика конфиденциальности</a></span>
+    <span>Не является официальным продуктом Minecraft. Не одобрено и не связано с Mojang или Microsoft.</span>
+  </footer>
+</div>
+
+<script>
+/* ===== НАСТРОЙКИ САЙТА: заполни — и страница обновится сама ===== */
+const SITE = {
+  ip: "",            // адрес сервера, например "play.aneloria.net"
+  contact: "",       // почта или ник для связи, например "hello@aneloria.net"
+  links: [           // соцсети: { name: "Discord", url: "https://..." }
+  ]
+};
+
+(() => {
+  const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const $ = id => document.getElementById(id);
+
+  // Адрес сервера и кнопка копирования
+  if (SITE.ip) {
+    $('ip').textContent = SITE.ip;
+    $('ipnote').textContent = 'Вставь этот адрес в Minecraft: «Сетевая игра» → «Добавить сервер».';
+    const b = $('copy'); b.hidden = false;
+    b.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(SITE.ip); b.textContent = 'Скопировано'; }
+      catch { b.textContent = 'Выдели адрес и скопируй'; }
+      setTimeout(() => b.textContent = 'Скопировать адрес', 2000);
+    });
+  }
+  // Контакт
+  if (SITE.contact) {
+    const c = $('contact');
+    if (SITE.contact.includes('@') && !SITE.contact.startsWith('@')) {
+      const a = document.createElement('a'); a.href = 'mailto:' + SITE.contact; a.textContent = SITE.contact;
+      c.textContent = ''; c.append(a);
+    } else c.textContent = SITE.contact;
+  }
+  // Соцсети
+  if (SITE.links.length) {
+    const box = $('links'); box.hidden = false;
+    for (const l of SITE.links) {
+      const a = document.createElement('a'); a.className = 'btn ghost'; a.href = l.url; a.textContent = l.name; a.rel = 'noopener';
+      box.append(a);
+    }
+  }
+
+  // Шапка: линия при прокрутке и подсветка текущего раздела
+  const bar = $('bar'), navs = [...document.querySelectorAll('.top nav a')];
+  const onScroll = () => bar.classList.toggle('stuck', window.scrollY > 8);
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver(es => {
+      for (const e of es) if (e.isIntersecting)
+        navs.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id));
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    document.querySelectorAll('main section[id]').forEach(s => io.observe(s));
+  }
+
+  // Портал: вращающиеся частицы по эллипсу, как у портала Лабиринта.
+  const cv = $('portal'), cx = cv.getContext('2d');
+  const W = cv.width, H = cv.height, ox = W / 2, oy = H * 0.47, rx = W * 0.34, ry = H * 0.36;
+  const parts = Array.from({ length: 260 }, () => ({ a: Math.random() * Math.PI * 2, r: 0.55 + Math.random() * 0.5, s: 0.002 + Math.random() * 0.006, z: Math.random() }));
+  let visible = true;
+  function frame() {
+    cx.clearRect(0, 0, W, H);
+    cx.fillStyle = '#17121f';
+    for (let i = 0; i < 26; i++) {
+      const a = Math.PI + (i / 25) * Math.PI, x = ox + Math.cos(a) * (rx + 26), y = oy + Math.sin(a) * (ry + 26);
+      cx.fillRect(Math.round(x / 8) * 8 - 12, Math.round(y / 8) * 8 - 12, 24, 24);
+    }
+    cx.fillRect(ox - rx - 38, oy, 24, ry + 40); cx.fillRect(ox + rx + 14, oy, 24, ry + 40);
+    const g = cx.createRadialGradient(ox, oy, 10, ox, oy, rx * 1.1);
+    g.addColorStop(0, 'rgba(176,124,255,.55)'); g.addColorStop(.6, 'rgba(110,60,200,.25)'); g.addColorStop(1, 'rgba(13,10,20,0)');
+    cx.fillStyle = g; cx.beginPath(); cx.ellipse(ox, oy, rx, ry, 0, 0, Math.PI * 2); cx.fill();
+    for (const p of parts) {
+      if (!still) p.a += p.s * (1.4 - p.r);
+      const x = ox + Math.cos(p.a) * rx * p.r, y = oy + Math.sin(p.a) * ry * p.r;
+      const size = 3 + Math.round(p.z * 3);
+      cx.fillStyle = p.z > .82 ? '#f2b45a' : p.z > .45 ? '#d7b8ff' : '#8a55e6';
+      cx.globalAlpha = .35 + p.z * .6;
+      cx.fillRect(Math.round(x), Math.round(y), size, size);
+    }
+    cx.globalAlpha = 1;
+    if (!still && visible) requestAnimationFrame(frame);
+  }
+  frame();
+  // Не крутим портал, когда он за экраном
+  if (!still && 'IntersectionObserver' in window) {
+    new IntersectionObserver(es => {
+      const was = visible; visible = es[0].isIntersecting;
+      if (visible && !was) requestAnimationFrame(frame);
+    }).observe(cv);
+  }
+
+  // Схема континента: детерминированный «шум», чтобы карта всегда была одинаковой.
+  const mv = $('map'), mx = mv.getContext('2d'), N = mv.width;
+  const hash = (x, y) => { const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return s - Math.floor(s); };
+  const smooth = (x, y) => {
+    const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+    const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+    const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+    return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+  };
+  const img = mx.createImageData(N, N);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const dx = (x - N / 2) / (N / 2), dy = (y - N / 2) / (N / 2), edge = 1 - Math.min(1, Math.hypot(dx, dy));
+    const h = (smooth(x / 18, y / 18) * .6 + smooth(x / 7, y / 7) * .3 + smooth(x / 3, y / 3) * .1) * .8 + edge * .55 - .25;
+    const col = h < .28 ? [22, 30, 66] : h < .32 ? [168, 150, 110] : h < .55 ? [52, 92, 58] : h < .7 ? [38, 70, 46] : h < .8 ? [96, 90, 104] : [220, 214, 230];
+    const i = (y * N + x) * 4; img.data[i] = col[0]; img.data[i + 1] = col[1]; img.data[i + 2] = col[2]; img.data[i + 3] = 255;
+  }
+  mx.putImageData(img, 0, 0);
+  mx.fillStyle = '#b07cff'; mx.fillRect(N / 2 - 3, N / 2 - 3, 6, 6);
+  mx.fillStyle = '#0d0a14'; mx.fillRect(N / 2 - 1, N / 2 - 1, 2, 2);
+})();
+</script>
+</body>
+</html>
